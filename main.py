@@ -1,10 +1,13 @@
+import random
+
 import pygame
 from pygame.color import THECOLORS
 from pygame import Vector2, K_LEFT, K_RIGHT
 import sys
 from typing import Iterable, Union
 
-from classes import Ball, Board
+from classes import Ball, Board, Block
+
 # from contoller import move_to_left, move_to_right, controller
 # from objects_controller import init_screen
 
@@ -24,8 +27,15 @@ BOARD_SPEED = Vector2(5, 0)
 SCREEN_WIDTH = 1200
 SCREEN_HEIGHT = 800
 SCREEN_SIZE = (SCREEN_WIDTH, SCREEN_HEIGHT)
+SCREEN_COLOR_NAME = 'black'
+SCREEN_COLOR = THECOLORS.get(SCREEN_COLOR_NAME, (0, 0, 0))
 
-SCREEN_COLOR = THECOLORS.get('black', (0, 0, 0))
+BLOCK_SIZE = (50, 10)
+BLOCK_COLORS = [THECOLORS[color] for color in THECOLORS.keys() if color != SCREEN_COLOR_NAME]
+BLOCK_LINE_COUNT = 2
+BLOCK_COUNT_IN_LINE = (SCREEN_WIDTH // BLOCK_SIZE[0])
+
+
 
 OBJECTS_DICT = dict()
 
@@ -68,11 +78,37 @@ CANVAS = pygame.display.set_mode(SCREEN_SIZE)
 
 def blit_objs(canvas: 'Surface', objs: Iterable):
     for obj in objs:
+        print(obj.rect.center)
         canvas.blit(obj, obj.rect)
 
 
 def move_obj(obj, direction: int):
     obj.move(direction)
+
+
+def create_blocks(start_block) -> list:
+    blocks = [start_block]
+
+    offset_x = Vector2(BLOCK_SIZE[0], 0)
+    topleft = Vector2(start_block.rect.topleft) + offset_x
+
+    for i in range(BLOCK_LINE_COUNT):
+        for j in range(BLOCK_COUNT_IN_LINE):
+            block = Block.init_from_rect(start_block.get_rect(topleft=topleft))
+
+            # TODO: не пересчитывается центр блока???
+
+            block.base_color = random.choice(BLOCK_COLORS)
+            block._bg_color = SCREEN_COLOR
+
+            blocks.append(block)
+
+            topleft += offset_x
+
+        topleft = Vector2(start_block.rect.bottomleft)
+
+    return blocks
+
 
 
 # def check_movement(obj, old_pos, new_pos):
@@ -95,6 +131,7 @@ clock = pygame.time.Clock()
 
 ball = Ball(BALL_RADIUS, BALL_COLOR, SCREEN_COLOR)
 board = Board(BOARD_SIZE, BOARD_START_POSITION, BOARD_COLOR, SCREEN_COLOR, BOARD_SPEED)
+block = Block(BLOCK_SIZE, random.choice(BLOCK_COLORS), SCREEN_COLOR)
 
 
 
@@ -106,6 +143,8 @@ GAME_OBJS = [
     ball,
     board
 ]
+
+GAME_OBJS += create_blocks(block)
 
 for g_obj in GAME_OBJS:
     color = g_obj.base_color
@@ -151,6 +190,7 @@ while running:
 
     pygame.display.flip()
     clock.tick(FPS)
+    break
 
 pygame.quit()
 

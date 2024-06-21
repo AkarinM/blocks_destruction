@@ -18,21 +18,37 @@ class MoveMixin:
 
 
 class _Base(Surface, ABC):
-    def __init__(self, size: tuple, base_color, bg_color):
+    def __init__(self, size: tuple, base_color=None, bg_color=None):
         super().__init__(size)
 
+        self._size = size
         self._base_color = base_color  # основной цвет
         self._bg_color = bg_color  # для перерисовки
 
         self._rect = self.get_rect()
 
+    @classmethod
+    def init_from_rect(cls, rect):
+        size = rect.size
+
+        return cls(size)
+
     @property
     def base_color(self):
         return self._base_color
 
+    @base_color.setter
+    def base_color(self, color):
+        self._base_color = color
+
     @property
     def rect(self) -> Rect:
         return self._rect
+
+    @property
+    def size(self):
+        return self._size
+
 
 
 class Block(_Base):
