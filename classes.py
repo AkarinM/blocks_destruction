@@ -31,7 +31,12 @@ class _Base(Surface, ABC):
     def init_from_rect(cls, rect):
         size = rect.size
 
-        return cls(size)
+        # print('topleft', rect.topleft)
+        # print('centr', rect.center)
+        obj = cls(size)
+        obj.rect.center = rect.center
+
+        return obj
 
     @property
     def base_color(self):

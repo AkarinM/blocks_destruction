@@ -30,9 +30,9 @@ SCREEN_SIZE = (SCREEN_WIDTH, SCREEN_HEIGHT)
 SCREEN_COLOR_NAME = 'black'
 SCREEN_COLOR = THECOLORS.get(SCREEN_COLOR_NAME, (0, 0, 0))
 
-BLOCK_SIZE = (50, 10)
+BLOCK_SIZE = (50, 20)
 BLOCK_COLORS = [THECOLORS[color] for color in THECOLORS.keys() if color != SCREEN_COLOR_NAME]
-BLOCK_LINE_COUNT = 2
+BLOCK_LINE_COUNT = 10
 BLOCK_COUNT_IN_LINE = (SCREEN_WIDTH // BLOCK_SIZE[0])
 
 
@@ -78,7 +78,7 @@ CANVAS = pygame.display.set_mode(SCREEN_SIZE)
 
 def blit_objs(canvas: 'Surface', objs: Iterable):
     for obj in objs:
-        print(obj.rect.center)
+        # print(obj.rect.center)
         canvas.blit(obj, obj.rect)
 
 
@@ -105,7 +105,7 @@ def create_blocks(start_block) -> list:
 
             topleft += offset_x
 
-        topleft = Vector2(start_block.rect.bottomleft)
+        topleft = Vector2(start_block.rect.bottomleft) * (i + 1)
 
     return blocks
 
@@ -190,7 +190,7 @@ while running:
 
     pygame.display.flip()
     clock.tick(FPS)
-    break
+    # break
 
 pygame.quit()
 
