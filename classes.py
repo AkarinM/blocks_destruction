@@ -1,14 +1,12 @@
-from abc import ABC
-from typing import Union, List
-
-import pygame.draw
 from pygame import Rect, Vector2, Surface
 from pygame.sprite import Sprite
 
 
 class MoveMixin:
+    """
+    Миксин для добавления свойства двигаться
+    """
     _speed = Vector2(1, 0)
-    # _direction = 0
 
     @property
     def speed(self):
@@ -18,30 +16,37 @@ class MoveMixin:
     def speed(self, new_speed: Vector2):
         self._speed = new_speed
 
-    def move(self) -> Union[Vector2, None]:
+    def move(self) -> None:
+        """
+        Смещает центр объекта на заданную скорость
+        """
         speed = self.speed
 
         if hasattr(self, 'rect'):
             rect = getattr(self, 'rect')
 
-            # rect.move_ip(speed)
             rect.center += speed
-
-            return rect.center
 
 
 class Block(Surface):
-    def __init__(self, size: tuple, base_color=None, bg_color=None):
+    """
+    Описывает разрушаемый блок
+    """
+    def __init__(self, size: tuple, base_color=None):
         super().__init__(size)
 
         self._size = size
         self._base_color = base_color  # основной цвет
-        self._bg_color = bg_color  # для перерисовки
 
         self._rect = self.get_rect()
 
     @classmethod
-    def init_from_rect(cls, rect):
+    def init_from_rect(cls, rect: Rect) -> 'Block':
+        """
+        Создает и возвращает новый блок на основе объекта  Rect
+        :param rect: Rect на основе которого создать объект
+        :return: объект Block
+        """
         size = rect.size
         obj = cls(size)
         obj.rect.center = rect.center
@@ -64,23 +69,16 @@ class Block(Surface):
     def size(self):
         return self._size
 
-    @property
-    def bg_color(self):
-        return self._bg_color
-
-    @bg_color.setter
-    def bg_color(self, color):
-        self._bg_color = color
-
 
 class Ball(Sprite, Block, MoveMixin):
-    # def __init__(self, image, speed):
+    """
+    Описывает шарик
+    """
     def __init__(self, image):
         super().__init__()
 
         self._image = image
         self._rect = self._image.get_rect()
-        # self.speed = speed
 
     @property
     def image(self):
@@ -91,7 +89,7 @@ class Ball(Sprite, Block, MoveMixin):
         return super().rect
 
     @rect.setter
-    def rect(self, bottom_pos):
+    def rect(self, bottom_pos: Vector2):
         """
         Задает стартовую позицию
         :param bottom_pos: Позиция центра нижней граници
@@ -99,11 +97,44 @@ class Ball(Sprite, Block, MoveMixin):
 
         self._rect = self.image.get_rect(midbottom=bottom_pos)
 
+    def control_pos_out_screen(self, screen) -> None:
+        """
+        Контролирует позицию шарика внутри экрана, изменяет направления от удара о борта
+        :param screen: экран
+        :return:
+        """
+        screen_rect = screen.get_rect()
+        ball_rect = self.rect
+
+        speed = self.speed
+
+        if ball_rect.left <= screen_rect.left or ball_rect.right >= screen_rect.right:
+            if speed.y == 0:
+                self.speed *= -1
+
+            else:
+                self.speed.x *= -1
+
+        elif ball_rect.top <= screen_rect.top:
+            if speed.x == 0:
+                self.speed *= -1
+
+            else:
+                self.speed.y *= -1
+
     def check_collide(self, obstacles_list: list) -> int:
-        # return self.rect.collidelistall(obstacles_list)  # можно использовать спец. метод, сразу возвращая объекты, но я не использую
+        """
+        Проверяте, столкнулся ли шарик с блоком
+        :param obstacles_list: список блоков
+        :return: индекс блока, с которым столкнулся шарик или -1, если нет столкновения ни с одним блоком
+        """
         return self.rect.collidelist(obstacles_list)  # можно использовать спец. метод, сразу возвращая объекты, но я не использую
 
-    def change_direction(self, collide: Block):
+    def change_direction(self, collide: Block) -> None:
+        """
+        Изменяет направление движения шарика от препятствия
+        :param collide: препятствие
+        """
         top = self.rect.top
         bot = self.rect.bottom
         left = self.rect.left
@@ -148,15 +179,13 @@ class Ball(Sprite, Block, MoveMixin):
 
 
 class Board(Block, MoveMixin):
-    # def __init__(self, size, start_pos,  board_color, screen_color, speed):
-    def __init__(self, size, board_color, screen_color):
+    """
+    Описывает доску.
+    """
+    def __init__(self, size, board_color):
         self.board_color = board_color
-        self.screen_color = screen_color
-        # self.speed = speed
 
-        super().__init__(size, board_color, screen_color)
-
-        # self.rect.center = start_pos
+        super().__init__(size, board_color)
 
     @property
     def rect(self) -> Rect:
@@ -169,10 +198,3 @@ class Board(Block, MoveMixin):
         :param center_pos: Позиция центра
         """
         self._rect.center = center_pos
-
-    # def move(self, direction) -> Vector2:
-    #     speed = self.speed
-    #
-    #     self.rect.move_ip(speed)
-    #
-    #     return self.rect.center
