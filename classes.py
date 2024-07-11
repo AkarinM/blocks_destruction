@@ -32,6 +32,9 @@ class Block(Surface):
     """
     Описывает разрушаемый блок
     """
+
+    _count = 0
+
     def __init__(self, size: tuple, base_color=None):
         super().__init__(size)
 
@@ -39,6 +42,12 @@ class Block(Surface):
         self._base_color = base_color  # основной цвет
 
         self._rect = self.get_rect()
+        if self.__class__.__name__ == 'Block':
+            Block._count += 1
+
+    @classmethod
+    def destruct_block(cls):
+        cls._count -= 1
 
     @classmethod
     def init_from_rect(cls, rect: Rect) -> 'Block':
@@ -52,6 +61,10 @@ class Block(Surface):
         obj.rect.center = rect.center
 
         return obj
+
+    @classmethod
+    def get_count(cls) -> int:
+        return cls._count
 
     @property
     def base_color(self):
@@ -115,7 +128,8 @@ class Ball(Sprite, Block, MoveMixin):
             else:
                 self.speed.x *= -1
 
-        elif ball_rect.top <= screen_rect.top:
+        # elif ball_rect.top <= screen_rect.top:
+        elif ball_rect.top <= screen_rect.top or ball_rect.bottom >= screen_rect.bottom:
             if speed.x == 0:
                 self.speed *= -1
 
@@ -131,6 +145,53 @@ class Ball(Sprite, Block, MoveMixin):
         return self.rect.collidelist(obstacles_list)  # можно использовать спец. метод, сразу возвращая объекты, но я не использую
 
     def change_direction(self, collide: Block) -> None:
+        """
+        Изменяет направление движения шарика от препятствия
+        :param collide: препятствие
+        """
+        speed = self.speed
+
+        if speed.x == 0 or speed.y == 0:  # движение вверх/вниз, или влево/вправо
+            self.speed *= -1
+
+            return
+
+        ball_left_c = Vector2(self.rect.bottomleft)
+        ball_right_c = Vector2(self.rect.topright)
+
+        obj_left_c = Vector2(collide.rect.bottomleft)
+        obj_right_c = Vector2(collide.rect.topright)
+
+        left = max(ball_left_c.x, obj_left_c.x)
+        top = max(ball_right_c.y, obj_right_c.y)
+        right = min(ball_right_c.x, obj_right_c.x)
+        bot = min(ball_left_c.y, obj_left_c.y)
+
+        width = right - left
+        height = top - bot
+
+        # if speed.y < 0:
+        #     height = top - obj_bot
+        #
+        # else:
+        #     height = bot - obj_top
+        #
+        # if speed.x > 0:
+        #     width = right - obj_left
+        #
+        # else:
+        #     width = left - obj_right
+
+        # if height == width:  # попали ровно в угол
+        #     self.speed *= -1
+
+        if height < width:
+            self.speed.y *= -1
+
+        else:
+            self.speed.x *= -1
+
+    def change_direction1(self, collide: Block) -> None:
         """
         Изменяет направление движения шарика от препятствия
         :param collide: препятствие

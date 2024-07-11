@@ -1,4 +1,6 @@
 import random
+import time
+
 import pygame
 
 from pygame.color import THECOLORS
@@ -22,13 +24,14 @@ BOARD_START_POSITION = Vector2(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 50)
 
 BALL_SPRITE = pygame.image.load('resources/sprites/ball.png').convert_alpha()
 BALL_START_POSITION = Vector2(100, 100)
-BALL_SPEED = Vector2(0, 5) * -1
+BALL_SPEED = Vector2(0, 7) * -1
 
 BALL_SPEED.rotate_ip(23)
 
 BLOCK_SIZE = (50, 20)
 BLOCK_COLORS = [THECOLORS[color] for color in THECOLORS.keys() if color != SCREEN_COLOR_NAME]
-BLOCK_LINE_COUNT = 10
+BLOCK_LINE_COUNT = 1
+# BLOCK_LINE_COUNT = 10
 BLOCK_COUNT_IN_LINE = (SCREEN_WIDTH // BLOCK_SIZE[0])
 
 OBJECTS_DICT = dict()
@@ -64,10 +67,12 @@ def create_blocks(start_block) -> list:
     :param start_block: Блок
     :return: Список блоков
     """
-    blocks = [start_block]
+    # blocks = [start_block]
+    blocks = []
 
     offset_x = Vector2(BLOCK_SIZE[0], 0)
-    topleft = Vector2(start_block.rect.topleft) + offset_x
+    # topleft = Vector2(start_block.rect.topleft) + offset_x
+    topleft = Vector2(start_block.rect.topleft)
 
     for i in range(BLOCK_LINE_COUNT):
         for j in range(BLOCK_COUNT_IN_LINE):
@@ -100,8 +105,11 @@ BALL_START_POSITION = board.rect.midtop  # Привязываем стартов
 ball.rect = BALL_START_POSITION
 
 block = Block(BLOCK_SIZE, random.choice(BLOCK_COLORS))
+Block.destruct_block()  # не считаем только что созданный, он образец
 
+# blocks = create_blocks(block)
 GAME_OBJS.extend(create_blocks(block))
+
 GAME_OBJS.append(board)
 
 for g_obj in GAME_OBJS:
@@ -114,6 +122,8 @@ CANVAS.blit(ball.image, ball.rect)
 running = True
 key_down = None
 
+print(Block.get_count())
+win = False
 while running:
     for event in pygame.event.get():
         e_type = event.type
@@ -141,13 +151,18 @@ while running:
 
     ind = ball.check_collide(GAME_OBJS)
 
-    obj = GAME_OBJS[ind]
-
     if ind != -1:
+        obj = GAME_OBJS[ind]
         ball.change_direction(obj)
 
         if not isinstance(obj, Board):
             GAME_OBJS.pop(ind)
+            Block.destruct_block()
+            print(Block.get_count())
+
+    if Block.get_count() <= 0:
+        running = False
+        win = True
 
     CANVAS.fill(SCREEN_COLOR)
 
@@ -157,5 +172,12 @@ while running:
     pygame.display.flip()
 
     clock.tick(FPS)
+
+if win:
+    my_font = pygame.font.SysFont('Comic Sans MS', 30)
+    textsurface = my_font.render('Победа!', False, (220, 0, 0))
+    CANVAS.blit(textsurface, (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+    pygame.display.flip()
+    time.sleep(2.5)
 
 pygame.quit()
