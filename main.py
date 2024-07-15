@@ -1,11 +1,10 @@
+import pygame
 import random
 import time
 
-import pygame
-
+from classes import Ball, Board, Block
 from pygame.color import THECOLORS
 from pygame import Vector2, K_LEFT, K_RIGHT
-from classes import Ball, Board, Block
 
 pygame.init()  # Инициализация
 
@@ -67,11 +66,9 @@ def create_blocks(start_block) -> list:
     :param start_block: Блок
     :return: Список блоков
     """
-    # blocks = [start_block]
     blocks = []
 
     offset_x = Vector2(BLOCK_SIZE[0], 0)
-    # topleft = Vector2(start_block.rect.topleft) + offset_x
     topleft = Vector2(start_block.rect.topleft)
 
     for i in range(BLOCK_LINE_COUNT):
@@ -124,7 +121,8 @@ key_down = None
 
 print(Block.get_count())
 win = False
-while running:
+fail = False
+while running and not win and not fail:
     for event in pygame.event.get():
         e_type = event.type
 
@@ -139,10 +137,7 @@ while running:
 
     direction = ACTIONS_KEYS.get(key_down)
 
-    if direction is not None:
-        board.speed = direction
-    else:
-        board.speed = Vector2(0)
+    board.speed = direction if direction is not None else Vector2(0)
 
     board.move()
     ball.move()
@@ -161,8 +156,10 @@ while running:
             print(Block.get_count())
 
     if Block.get_count() <= 0:
-        running = False
+        # running = False
         win = True
+    elif ball.check_fail(CANVAS):
+        fail = True
 
     CANVAS.fill(SCREEN_COLOR)
 
@@ -174,8 +171,13 @@ while running:
     clock.tick(FPS)
 
 if win:
+    message = 'Победа!'
+elif fail:
+    message = 'Вы проиграли!'
+
+if win or fail:
     my_font = pygame.font.SysFont('Comic Sans MS', 30)
-    textsurface = my_font.render('Победа!', False, (220, 0, 0))
+    textsurface = my_font.render(message, False, (220, 0, 0))
     CANVAS.blit(textsurface, (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
     pygame.display.flip()
     time.sleep(2.5)

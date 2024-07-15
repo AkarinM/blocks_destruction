@@ -136,6 +136,18 @@ class Ball(Sprite, Block, MoveMixin):
             else:
                 self.speed.y *= -1
 
+    def check_fail(self, screen) -> bool:
+        """
+        Проверяет падение шарика на нижнюю границу
+        :param screen: экран
+        :return:
+        """
+        screen_rect = screen.get_rect()
+        ball_rect = self.rect
+
+        return ball_rect.bottom >= screen_rect.bottom
+
+
     def check_collide(self, obstacles_list: list) -> int:
         """
         Проверяте, столкнулся ли шарик с блоком
